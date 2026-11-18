@@ -1,0 +1,7 @@
+[WARN] Music not found (game continues silently): assets/music/menu.ogg
+[WARN] Music not found (game continues silently): assets/music/ambient.ogg
+[WARN] Sound not found (game continues silently): assets/sounds/axe.wav
+[WARN] Sound not found (game continues silently): assets/sounds/footstep.wav
+[INFO] Font loaded: /System/Library/Fonts/Supplemental/Arial.ttf
+[INFO] Initilisation Complete!
+[INFO] New game started: William

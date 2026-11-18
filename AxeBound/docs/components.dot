@@ -1,0 +1,39 @@
+digraph G {
+ rankdir=TB; fontname="Helvetica"; node [shape=box, style="filled,rounded", fontname="Helvetica", fontsize=11, fillcolor="#9fce63"]; edge [fontname="Helvetica", fontsize=9];
+ labelloc=t; label="AxeBound - code components and how they talk to each other"; fontsize=16;
+ subgraph cluster_loop { label="Program loop"; style=filled; fillcolor="#eef7e0";
+  main [label="main.cpp\nwindow + event loop\nfills globals 'frame'", fillcolor="#92d050"];
+  init [label="init.cpp\ninitWorkingDirectory()\ninit()"];
+  update [label="update.cpp\nupdate(dt)\nreads keys -> frame.move"];
+  render [label="render.cpp\nrender(window)\nrenderMode 'M' / 'T'"];
+ }
+ subgraph cluster_in { label="Input + shared state"; style=filled; fillcolor="#eef7e0";
+  input [label="inputManager.cpp\ncontrols[] -> button queue\ninputHeld / inputJustPressed"];
+  globals [label="globals.cpp / globals.h\npalette, layout, frame,\ngameFont, tileTexture, gameLog"];
+  logger [label="logger.h\ngameLog"];
+  save [label="saveManager.cpp\nsaves/slotN.sav\nsettings.cfg"];
+  audio [label="audio.cpp\nmusic + sounds"];
+ }
+ gs [label="GameSystem  (gameSystem.cpp)\nSINGLETON: owns both scenes,\nswitches scene at end of frame", fillcolor="#56bd3b"];
+ subgraph cluster_scenes { label="Scenes"; style=filled; fillcolor="#eef7e0";
+  menu [label="MenuScene  (menuScene.cpp)\nMain / Saves / New Game /\nSettings / Keybinds / Credits"];
+  game [label="GameScene  (gameScene.cpp + gameUi.cpp)\ngameplay rules, HUD + panels,\nsave/load, camera, drawWorld()"];
+ }
+ ui [label="ui.h\nlabel, image, uiButton,\ninputTextBox, uiGroup"];
+ subgraph cluster_world { label="World"; style=filled; fillcolor="#eef7e0";
+  levels [label="levels.cpp\nbuildLevel(): 3 premade maps\n+ tree targets"];
+  tilemap [label="tileMap.cpp\ntileMap + tile table\natlas built in code"];
+  objects [label="objects.cpp / objects.h\nentity tree, items, buildings,\nplayer, truck, workerAI (State), A*"];
+ }
+ main -> init [label="once"]; main -> update [label="each frame"]; main -> render [label="each frame"]; main -> globals [label="frame / layout"];
+ init -> input; init -> save [label="loadSettings"]; init -> audio; init -> globals [label="font + atlas"]; init -> gs [label="start()"];
+ update -> input [label="getUserInput()"]; update -> gs [label="update(dt)"];
+ render -> gs [label="render(window)"]; render -> game [label="drawWorld() if 'T'"];
+ gs -> menu [label="update/render\nwhen 'M'"]; gs -> game [label="update/render\nwhen 'T'"];
+ menu -> gs [label="requestNewGame /\nrequestLoad", style=dashed]; game -> gs [label="requestMenu", style=dashed];
+ menu -> ui; game -> ui; menu -> save; game -> save [label="saveGame/loadGame"]; menu -> audio; game -> audio;
+ game -> levels [label="buildLevel"]; levels -> tilemap; levels -> objects [label="creates entities"];
+ game -> tilemap [label="draw, solid, cold, flow"]; game -> objects [label="update / draw all entities"];
+ objects -> game [label="callbacks: spawnItem, isBlocked,\ndriftAt, changeLevel,\nonObjectiveBuilt, money", style=dashed];
+ input -> globals; globals -> logger;
+}

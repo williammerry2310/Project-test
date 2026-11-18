@@ -1,0 +1,26 @@
+digraph F {
+ rankdir=TB; fontname="Helvetica"; node [shape=box, style="filled,rounded", fontname="Helvetica", fontsize=11, fillcolor="#9fce63"]; edge [fontname="Helvetica", fontsize=9];
+ labelloc=t; label="AxeBound - execution order (start-up, then one frame, then scene changes)"; fontsize=16;
+ a [label="1. main(): initWorkingDirectory, create window,\nupdateLayout (16:9 letterbox)", fillcolor="#92d050"];
+ b [label="2. init(): font, tile atlas, input, loadSettings,\ninitAudio, GameSystem::start() -> Main Menu"];
+ c [label="3. Frame start: clear 'frame' events, dt = clock"];
+ d [label="4. pollEvent: Resized->updateLayout+onResize\nTextEntered->onText  KeyPressed/MouseButton->frame\nClosed->shutdown (autosave)"];
+ e [label="5. update(dt): updateUserInputs -> frame.move/sprint\n-> GameSystem::update(dt)"];
+ f [label="6a. MenuScene::update\nbuttons call GameSystem::request*()", fillcolor="#56bd3b"];
+ g [label="6b. GameScene::update (see below)", fillcolor="#56bd3b"];
+ h [label="7. GameSystem runs 'pending' scene change\n(save, load, new game, back to menu)"];
+ i [label="8. render(window): 'T' -> drawWorld (tiles, sorted entities)\nthen UI layer (labels, HUD, panels)  /  'M' -> menu pages"];
+ j [label="9. display(), gameLog.writeQueue(), quitRequested?"];
+ a->b->c->d->e; e->f [label="renderMode 'M'"]; e->g [label="renderMode 'T'"]; f->h; g->h; h->i->j; j->c [label="next frame", style=dashed];
+ subgraph cluster_g { label="GameScene::update order"; style=filled; fillcolor="#eef7e0"; node [fillcolor="#d9ead3"];
+  g1 [label="a. controller cursor + hot keys (Esc, B, N, M)"];
+  g2 [label="b. HUD + open panel update; run deferred button action"];
+  g3 [label="c. hotbar, building placement (click / R)"];
+  g4 [label="d. interact / pick up / drop / chop / truck"];
+  g5 [label="e. move player or drive truck (collision)"];
+  g6 [label="f. every entity update: items float, sell points sell,\nbuildings produce, workers (State: Off/Searching/Collecting)"];
+  g7 [label="g. remove dead, cold/frost, tree regrowth"];
+  g8 [label="h. apply pendingLevel (gates), camera, autosave"];
+  g1->g2->g3->g4->g5->g6->g7->g8; }
+ g -> g1 [style=dotted];
+}
